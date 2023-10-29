@@ -138,11 +138,12 @@ long EditDistance_NW_Rec(char* A, size_t lengthA, char* B, size_t lengthB)
 }
 
 long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
+   _init_base_match() ;
    if (lengthB < lengthA){
       char * C = A;
       A = B; B = C;
       size_t size = lengthA;
-      lengthA = lengthB; lengthB = lengthB;
+      lengthA = lengthB; lengthB = size;
    }
 
    long phi[lengthA];
@@ -168,18 +169,22 @@ long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
             prec = phi[i];
          }
 
-         else if( isBase(A[i]) != 0){
-            int sigma = 1 ? isUnknownBase(A[i]) || A[i] != B[j] : 0;
+         else if( isBase(A[i]) == 0){
+            phi[i + 1] = prec;            
+         }
+
+         else{
+            int sigma =  isUnknownBase(A[i]) ?  SUBSTITUTION_UNKNOWN_COST 
+                          : ( isSameBase(A[i], B[j]) ? 0 : SUBSTITUTION_COST ) 
+                   ;
             
             int phi1 = sigma + phi[i+1];
             int phi2 = 2 + prec;  
             int phi3 = 2 + phi[i];  
             phi[i + 1] = prec;
-            prec = phi1 ? phi1 < (phi2 ? phi2 < phi3 : phi3) : (phi2 ? phi2 < phi3 : phi3);
-         }
 
-         else{
-            phi[i + 1] = prec;
+            prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+
          }
       } 
    }

