@@ -146,9 +146,9 @@ long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
       lengthA = lengthB; lengthB = size;
    }
 
-   long phi[lengthA];
-   int j = lengthB - 1;
-   int i = lengthA - 1;
+   long phi[lengthA+1];
+   int j = lengthB;
+   int i = lengthA;
 
    phi[i] = 0;
 
@@ -162,8 +162,8 @@ long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
 
    for(j; j > -1; j--){
       phi[0] = prec;
-      prec = 2 * (isBase(B[j])) + phi[lengthA - 1];
-      for(i = lengthA - 2; i > -1; i--){
+      prec = 2 * (isBase(B[j])) + phi[lengthA];
+      for(i = lengthA - 1; i > -1; i--){
          if(isBase(B[j]) == 0){
             phi[i + 1] = prec;
             prec = phi[i];
@@ -190,7 +190,4 @@ long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
    }
 
    return prec;
-
-
-    
 }
