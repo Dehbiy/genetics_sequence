@@ -1,4 +1,4 @@
-Ce repertoires contient des petits fichiers pour vérifier que les programmes fonctionnent:
+Ce repertoire contient des petits fichiers pour vérifier que les programmes fonctionnent:
 - des petits tests pour verifier les resultats
 - 2 sequences genetiques de taille 30ko provenant de la base {https://www.ncbi.nlm.nih.gov/data-hub/genome (SARS Cov2)
 - 2 sequences genetiques de taille 200Mo provenant de la base {https://www.ncbi.nlm.nih.gov/data-hub/genome (Arabidopsis thaliana)

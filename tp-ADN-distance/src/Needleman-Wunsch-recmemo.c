@@ -137,3 +137,55 @@ long EditDistance_NW_Rec(char* A, size_t lengthA, char* B, size_t lengthB)
    return res ;
 }
 
+long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
+   if (lengthB < lengthA){
+      char * C = A;
+      A = B; B = C;
+      size_t size = lengthA;
+      lengthA = lengthB; lengthB = lengthB;
+   }
+
+   long phi[lengthA];
+   int j = lengthB - 1;
+   int i = lengthA - 1;
+
+   phi[i] = 0;
+
+   i--;
+
+   for (i; i > -1; i--){
+      phi[i] = 2 * (isBase(A[i])) + phi[i+1];
+   }
+   long prec = phi[0];
+   j--;
+
+   for(j; j > -1; j--){
+      phi[0] = prec;
+      prec = 2 * (isBase(B[j])) + phi[lengthA - 1];
+      for(i = lengthA - 2; i > -1; i--){
+         if(isBase(B[j]) == 0){
+            phi[i + 1] = prec;
+            prec = phi[i];
+         }
+
+         else if( isBase(A[i]) != 0){
+            int sigma = 1 ? isUnknownBase(A[i]) || A[i] != B[j] : 0;
+            
+            int phi1 = sigma + phi[i+1];
+            int phi2 = 2 + prec;  
+            int phi3 = 2 + phi[i];  
+            phi[i + 1] = prec;
+            prec = phi1 ? phi1 < (phi2 ? phi2 < phi3 : phi3) : (phi2 ? phi2 < phi3 : phi3);
+         }
+
+         else{
+            phi[i + 1] = prec;
+         }
+      } 
+   }
+
+   return prec;
+
+
+    
+}
