@@ -26,6 +26,8 @@
  * \brief default value for memoization of minimal distance (defined as an impossible value for a distance, -1).
  */
 #define NOT_YET_COMPUTED -1L 
+#define K 4 
+
 
 /** \struct NW_MemoContext
  * \brief data for memoization of recursive Needleman-Wunsch algorithm 
@@ -184,10 +186,122 @@ long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
             phi[i + 1] = prec;
 
             prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
-
          }
       } 
    }
-
    return prec;
+}
+long EditDistance_NW_Cache_Aware(char *A, size_t lengthA, char *B, size_t lengthB){
+
+   _init_base_match() ;
+   if (lengthB < lengthA){
+      char * C = A;
+      A = B; B = C;
+      size_t size = lengthA;
+      lengthA = lengthB; lengthB = size;
+   }
+
+   long phi[lengthA+1];
+   long ksi[K];
+   int j = lengthB;
+   int i = lengthA;
+
+   phi[i] = 0;
+
+   i--;
+
+   for (i; i > -1; i--){
+      phi[i] = 2 * (isBase(A[i])) + phi[i+1];
+   }
+
+   ksi[j] = 0;
+   j--;
+
+   for (j; j > lengthB - K; j--){
+      ksi[j] = 2 * (isBase(B[j])) + ksi[j+1];
+   }
+   long prec = phi[lengthA -1 - K > 0 ? lengthA- 1 - K : 0];
+   for(int J = lengthB; J > 0 ; J-= K  ){
+      for(int I = lengthA - 1; I > 0; I-=K){
+         for(j = J - 1; (j > J - K && j > -1); j--){
+
+            phi[I - K > 0 ? I - K : 0] = prec;
+            //prec = 2 * (isBase(B[j])) + phi[lengthA];
+            phi[I + 1] = ksi[j % K];
+
+            if(isBase(B[j]) == 0){
+               prec = phi[I];
+            }
+
+            else if( isBase(A[I]) == 0){
+               prec = ksi[j % K];            
+            }
+
+            else{
+               int sigma =  isUnknownBase(A[I]) ?  SUBSTITUTION_UNKNOWN_COST 
+                          : ( isSameBase(A[I], B[j]) ? 0 : SUBSTITUTION_COST ) 
+                  ;
+            
+               int phi1 = sigma + phi[I+1];
+               int phi2 = 2 + ksi[j % K];  
+               int phi3 = 2 + phi[I]; 
+               prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+            }
+
+            for(i = I - 1; (i > I + 1 - K && i > 0); i--){
+
+               if(isBase(B[j]) == 0){
+                  phi[i + 1] = prec;
+                  prec = phi[i];
+               }
+
+               else if( isBase(A[i]) == 0){
+                  phi[i + 1] = prec;            
+               }
+
+               else{
+                  int sigma =  isUnknownBase(A[i]) ?  SUBSTITUTION_UNKNOWN_COST 
+                              : ( isSameBase(A[i], B[j]) ? 0 : SUBSTITUTION_COST ) 
+                        ;
+                  
+                  int phi1 = sigma + phi[i+1];
+                  int phi2 = 2 + prec;  
+                  int phi3 = 2 + phi[i];  
+                  phi[i + 1] = prec;
+
+                  prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+               }
+
+            }
+            if(isBase(B[j]) == 0){
+               phi[i + 1] = prec;
+               prec = phi[i];
+            }
+
+            else if( isBase(A[i]) == 0){
+               phi[i + 1] = prec;            
+            }
+
+            else{
+               int sigma =  isUnknownBase(A[i]) ?  SUBSTITUTION_UNKNOWN_COST 
+                           : ( isSameBase(A[i], B[j]) ? 0 : SUBSTITUTION_COST ) 
+                     ;
+               
+               int phi1 = sigma + phi[i+1];
+               int phi2 = 2 + prec;  
+               int phi3 = 2 + phi[i];  
+               phi[i + 1] = prec;
+
+               prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+            }
+            ksi[j % K] = prec;
+
+         }
+      }
+   }
+
+   return ksi[0];
+}
+long EditDistance_NW_Cache_Oblivious(char *A, size_t lengthA, char *B, size_t lengthB){
+   return 1;
 }
