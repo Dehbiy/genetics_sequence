@@ -26,7 +26,7 @@
  * \brief default value for memoization of minimal distance (defined as an impossible value for a distance, -1).
  */
 #define NOT_YET_COMPUTED -1L 
-#define K 4 
+#define K 1
 
 
 /** \struct NW_MemoContext
@@ -147,7 +147,6 @@ long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
       size_t size = lengthA;
       lengthA = lengthB; lengthB = size;
    }
-
    long phi[lengthA+1];
    int j = lengthB;
    int i = lengthA;
@@ -200,13 +199,13 @@ long EditDistance_NW_Cache_Aware(char *A, size_t lengthA, char *B, size_t length
       size_t size = lengthA;
       lengthA = lengthB; lengthB = size;
    }
-
+   int real_k = K<lengthB? K:lengthB; 
    long phi[lengthA+1];
-   long ksi[K];
-   int j = lengthB;
+   long ksi[real_k+1];
    int i = lengthA;
-
+   int j = real_k-1;
    phi[i] = 0;
+   int prec_ksi = 0;
 
    i--;
 
@@ -214,93 +213,84 @@ long EditDistance_NW_Cache_Aware(char *A, size_t lengthA, char *B, size_t length
       phi[i] = 2 * (isBase(A[i])) + phi[i+1];
    }
 
-   ksi[j] = 0;
-   j--;
+   int ksi_k = 0;
 
-   for (j; j > lengthB - K; j--){
-      ksi[j] = 2 * (isBase(B[j])) + ksi[j+1];
-   }
-   long prec = phi[lengthA -1 - K > 0 ? lengthA- 1 - K : 0];
-   for(int J = lengthB; J > 0 ; J-= K  ){
-      for(int I = lengthA - 1; I > 0; I-=K){
-         for(j = J - 1; (j > J - K && j > -1); j--){
+   long prec = phi[(int) lengthA - real_k > 0 ? lengthA - real_k : 0];
+   for(int J = lengthB ; J > 0 ; J-= real_k  ){
+      ksi[real_k] = ksi_k;
+      for (j = real_k-1 ; j > -1; j--){
+         ksi[j] = 2 * (isBase(B[j])) + ksi[j+1];
+         }
+      ksi_k = ksi[real_k-(int) lengthB>0?real_k-lengthB:0];
+      for(int I = lengthA ; I > 0; I-=real_k){
+         int ksi_Kplus = phi[I-real_k>0?I-real_k:0];
+         for(j = J; (j > J - real_k && j > 0); j--){
 
-            phi[I - K > 0 ? I - K : 0] = prec;
+            if(j!=J) phi[I - real_k > 0 ? I - real_k : 0] = prec;
+            
             //prec = 2 * (isBase(B[j])) + phi[lengthA];
-            phi[I + 1] = ksi[j % K];
 
-            if(isBase(B[j]) == 0){
-               prec = phi[I];
+            if(isBase(B[j-1]) == 0 ){
+               phi[I] = ksi[real_k-J+j-1];
+               prec = phi[I-1];
             }
 
-            else if( isBase(A[I]) == 0){
-               prec = ksi[j % K];            
+            else if( isBase(A[I-1]) == 0){
+               phi[I] = ksi[real_k-J+j-1];
+               prec = ksi[real_k-J+j-1];            
             }
 
             else{
-               int sigma =  isUnknownBase(A[I]) ?  SUBSTITUTION_UNKNOWN_COST 
-                          : ( isSameBase(A[I], B[j]) ? 0 : SUBSTITUTION_COST ) 
+               int sigma =  isUnknownBase(A[I-1]) ?  SUBSTITUTION_UNKNOWN_COST 
+                          : ( isSameBase(A[I-1], B[j-1]) ? 0 : SUBSTITUTION_COST ) 
                   ;
             
-               int phi1 = sigma + phi[I+1];
-               int phi2 = 2 + ksi[j % K];  
-               int phi3 = 2 + phi[I]; 
+               int phi1 = sigma + prec_ksi;
+               int phi2 = 2 + ksi[real_k-J+j-1];  
+               int phi3 = 2 + phi[I-1]; 
                prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+               phi[I] = ksi[real_k-J+j-1];
             }
 
-            for(i = I - 1; (i > I + 1 - K && i > 0); i--){
+            if (j == J) phi[I] = ksi[0];
+            for(i = I-1; (i > I - real_k && i >0); i--){
 
-               if(isBase(B[j]) == 0){
-                  phi[i + 1] = prec;
-                  prec = phi[i];
+               if(isBase(B[j-1]) == 0){
+                  phi[i] = prec;
+                  prec = phi[i-1];
                }
 
-               else if( isBase(A[i]) == 0){
-                  phi[i + 1] = prec;            
+               else if( isBase(A[i-1]) == 0){
+                  phi[i] = prec;            
                }
 
                else{
-                  int sigma =  isUnknownBase(A[i]) ?  SUBSTITUTION_UNKNOWN_COST 
-                              : ( isSameBase(A[i], B[j]) ? 0 : SUBSTITUTION_COST ) 
+                  int sigma =  isUnknownBase(A[i-1]) ?  SUBSTITUTION_UNKNOWN_COST 
+                              : ( isSameBase(A[i-1], B[j-1]) ? 0 : SUBSTITUTION_COST ) 
                         ;
                   
-                  int phi1 = sigma + phi[i+1];
+                  int phi1 = sigma + phi[i];
                   int phi2 = 2 + prec;  
-                  int phi3 = 2 + phi[i];  
-                  phi[i + 1] = prec;
+                  int phi3 = 2 + phi[i-1];  
+                  phi[i] = prec;
 
                   prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
                }
 
             }
-            if(isBase(B[j]) == 0){
-               phi[i + 1] = prec;
-               prec = phi[i];
-            }
-
-            else if( isBase(A[i]) == 0){
-               phi[i + 1] = prec;            
-            }
-
-            else{
-               int sigma =  isUnknownBase(A[i]) ?  SUBSTITUTION_UNKNOWN_COST 
-                           : ( isSameBase(A[i], B[j]) ? 0 : SUBSTITUTION_COST ) 
-                     ;
-               
-               int phi1 = sigma + phi[i+1];
-               int phi2 = 2 + prec;  
-               int phi3 = 2 + phi[i];  
-               phi[i + 1] = prec;
-
-               prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
-            }
-            ksi[j % K] = prec;
+            prec_ksi = ksi[real_k-J+j-1];
+            ksi[real_k-J+j-1] = prec;
 
          }
+         ksi[real_k] = ksi_Kplus;
+         phi[I-real_k>0?I-real_k:0] = prec;
+         prec_ksi = prec;
+         //prec = phi[I-2*real_k>0?I-2*real_k:0];
       }
+      prec_ksi = ksi_k;
    }
 
-   return ksi[0];
+   return prec;
 }
 long EditDistance_NW_Cache_Oblivious(char *A, size_t lengthA, char *B, size_t lengthB){
    return 1;
