@@ -26,7 +26,7 @@
  * \brief default value for memoization of minimal distance (defined as an impossible value for a distance, -1).
  */
 #define NOT_YET_COMPUTED -1L 
-#define K 1
+#define K 4
 
 
 /** \struct NW_MemoContext
@@ -191,107 +191,116 @@ long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
    return prec;
 }
 long EditDistance_NW_Cache_Aware(char *A, size_t lengthA, char *B, size_t lengthB){
+   _init_base_match();
 
-   _init_base_match() ;
+   // Ensure that sequenceA (A) is the longer sequence.
    if (lengthB < lengthA){
-      char * C = A;
-      A = B; B = C;
-      size_t size = lengthA;
-      lengthA = lengthB; lengthB = size;
+      char * temp = A;
+      A = B;
+      B = temp;
+      size_t tempLength = lengthA;
+      lengthA = lengthB;
+      lengthB = tempLength;
    }
-   int real_k = K<lengthB? K:lengthB; 
-   long phi[lengthA+1];
-   long ksi[real_k+1];
+   
+   // Calculate the number of iterations based on K or the length of sequenceB.
+   int realK = K < lengthB ? K : lengthB;
+
+   // Initialize arrays for phi and ksi.
+   long phi[lengthA + 1];
+   long ksi[realK + 1];
+
    int i = lengthA;
-   int j = real_k-1;
+   int j = realK - 1;
    phi[i] = 0;
-   int prec_ksi = 0;
+   int precKsi = 0;
 
    i--;
 
+   // Calculate phi values for sequenceA.
    for (i; i > -1; i--){
-      phi[i] = 2 * (isBase(A[i])) + phi[i+1];
+      phi[i] = 2 * (isBase(A[i])) + phi[i + 1];
    }
 
-   int ksi_k = 0;
+   int ksiK = 0;
+   long precPhi = phi[(int) lengthA - realK > 0 ? lengthA - realK : 0];
 
-   long prec = phi[(int) lengthA - real_k > 0 ? lengthA - real_k : 0];
-   for(int J = lengthB ; J > 0 ; J-= real_k  ){
-      ksi[real_k] = ksi_k;
-      for (j = real_k-1 ; j > -1; j--){
-         ksi[j] = 2 * (isBase(B[j])) + ksi[j+1];
-         }
-      ksi_k = ksi[real_k-(int) lengthB>0?real_k-lengthB:0];
-      for(int I = lengthA ; I > 0; I-=real_k){
-         int ksi_Kplus = phi[I-real_k>0?I-real_k:0];
-         for(j = J; (j > J - real_k && j > 0); j--){
+   // Iterate through sequenceB with a step size of realK.
+   for(int BLength = lengthB; BLength > 0; BLength -= realK){
+      ksi[realK] = ksiK;
 
-            if(j!=J) phi[I - real_k > 0 ? I - real_k : 0] = prec;
-            
-            //prec = 2 * (isBase(B[j])) + phi[lengthA];
+      // Calculate ksi values for sequenceB.
+      for (j = realK - 1; j > -1; j--){
+         ksi[j] = 2 * (isBase(B[j])) + ksi[j + 1];
+      }
+      ksiK = ksi[realK - (int) lengthB > 0 ? realK - lengthB : 0];
 
+      // Iterate through sequenceA with a step size of realK.
+      for(int ALength = lengthA; ALength > 0; ALength -= realK){
+         int ksiKPlus = phi[ALength - realK > 0 ? ALength - realK : 0];
+
+         for(j = BLength; (j > BLength - realK && j > 0); j--){
+
+            if(j != BLength) phi[ALength - realK > 0 ? ALength - realK : 0] = precPhi;
+
+            // Handle cases where characters are not bases.
             if(isBase(B[j-1]) == 0 ){
-               phi[I] = ksi[real_k-J+j-1];
-               prec = phi[I-1];
+               phi[ALength] = ksi[realK - BLength + j - 1];
+               precPhi = phi[ALength-1];
             }
-
-            else if( isBase(A[I-1]) == 0){
-               phi[I] = ksi[real_k-J+j-1];
-               prec = ksi[real_k-J+j-1];            
+            else if( isBase(A[ALength-1]) == 0){
+               phi[ALength] = ksi[realK - BLength + j - 1];
+               precPhi = ksi[realK - BLength + j - 1];            
             }
-
             else{
-               int sigma =  isUnknownBase(A[I-1]) ?  SUBSTITUTION_UNKNOWN_COST 
-                          : ( isSameBase(A[I-1], B[j-1]) ? 0 : SUBSTITUTION_COST ) 
+               // Calculate costs for substitution and insertion/deletion.
+               int sigma =  isUnknownBase(A[ALength-1]) ?  SUBSTITUTION_UNKNOWN_COST 
+                          : ( isSameBase(A[ALength-1], B[j-1]) ? 0 : SUBSTITUTION_COST ) 
                   ;
             
-               int phi1 = sigma + prec_ksi;
-               int phi2 = 2 + ksi[real_k-J+j-1];  
-               int phi3 = 2 + phi[I-1]; 
-               prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
-               phi[I] = ksi[real_k-J+j-1];
+               int phi1 = sigma + precKsi;
+               int phi2 = 2 + ksi[realK - BLength + j - 1];  
+               int phi3 = 2 + phi[ALength-1]; 
+               precPhi = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+               phi[ALength] = ksi[realK - BLength + j - 1];
             }
 
-            if (j == J) phi[I] = ksi[0];
-            for(i = I-1; (i > I - real_k && i >0); i--){
-
+            if (j == BLength) phi[ALength] = ksi[0];
+            
+            // Iterate through sequenceA with a step size of realK.
+            for(i = ALength-1; (i > ALength - realK && i >0); i--){
                if(isBase(B[j-1]) == 0){
-                  phi[i] = prec;
-                  prec = phi[i-1];
+                  phi[i] = precPhi;
+                  precPhi = phi[i-1];
                }
-
                else if( isBase(A[i-1]) == 0){
-                  phi[i] = prec;            
+                  phi[i] = precPhi;            
                }
-
                else{
+                  // Calculate costs for substitution and insertion/deletion.
                   int sigma =  isUnknownBase(A[i-1]) ?  SUBSTITUTION_UNKNOWN_COST 
                               : ( isSameBase(A[i-1], B[j-1]) ? 0 : SUBSTITUTION_COST ) 
                         ;
-                  
                   int phi1 = sigma + phi[i];
-                  int phi2 = 2 + prec;  
+                  int phi2 = 2 + precPhi;  
                   int phi3 = 2 + phi[i-1];  
-                  phi[i] = prec;
-
-                  prec = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+                  phi[i] = precPhi;
+                  precPhi = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
                }
-
             }
-            prec_ksi = ksi[real_k-J+j-1];
-            ksi[real_k-J+j-1] = prec;
-
+            precKsi = ksi[realK - BLength + j - 1];
+            ksi[realK - BLength + j - 1] = precPhi;
          }
-         ksi[real_k] = ksi_Kplus;
-         phi[I-real_k>0?I-real_k:0] = prec;
-         prec_ksi = prec;
-         //prec = phi[I-2*real_k>0?I-2*real_k:0];
+         ksi[realK] = ksiKPlus;
+         phi[ALength - realK > 0 ? ALength - realK : 0] = precPhi;
+         precKsi = precPhi;
       }
-      prec_ksi = ksi_k;
+      precKsi = ksiK;
    }
 
-   return prec;
+   return precPhi;
 }
+
 long EditDistance_NW_Cache_Oblivious(char *A, size_t lengthA, char *B, size_t lengthB){
    return 1;
 }
