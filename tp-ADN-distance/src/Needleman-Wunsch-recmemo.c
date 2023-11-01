@@ -27,6 +27,7 @@
  */
 #define NOT_YET_COMPUTED -1L 
 #define K 4
+#define ZERO 4
 
 
 /** \struct NW_MemoContext
@@ -301,6 +302,98 @@ long EditDistance_NW_Cache_Aware(char *A, size_t lengthA, char *B, size_t length
    return precPhi;
 }
 
+
+
+void EditDistance_NW_Cache_Oblivious_it(char *A, size_t lengthA, 
+                                       char *B, size_t lengthB,
+                                       int beginI, int endI,
+                                       int beginJ, int endJ, 
+                                       long* phi, long* ksi){
+   
+   for(int j =  endJ; j >= beginJ; j--){
+      for(int i = endI; i >= beginI; i--){
+
+      }
+   }
+
+}
+
+
+
+
+
+
+
+
+void EditDistance_NW_Cache_Oblivious_rec(char *A, size_t lengthA,
+                                       char *B, size_t lengthB,
+                                       int beginI, int endI,
+                                       int beginJ, int endJ,
+                                       long* phi, long* ksi){
+   if ((lengthA < K) && (lengthB < K)){
+      EditDistance_NW_Cache_Oblivious_it(A, lengthA, B, lengthB, beginI, endI, beginJ, endJ, phi, ksi);
+      return;
+   }
+
+   EditDistance_NW_Cache_Oblivious_rec(A, lengthA,
+                                       B, lengthB,
+                                       beginI + lengthA/2, endI, 
+                                       beginJ + lengthB/2, endJ,
+                                       phi, ksi);
+
+   EditDistance_NW_Cache_Oblivious_rec(A, lengthA,
+                                       B, lengthB,
+                                       beginI, beginI + lengthA/2 - 1,
+                                       beginJ + lengthB/2, endJ,
+                                       phi, ksi);
+   
+   EditDistance_NW_Cache_Oblivious_rec(A, lengthA,
+                                       B, lengthB,
+                                       beginI + lengthA/2, endI,
+                                       beginJ, beginJ + lengthB/2 - 1,
+                                       phi, ksi);
+   
+   EditDistance_NW_Cache_Oblivious_rec(A, lengthA,
+                                       B,  lengthB, 
+                                       beginI, beginI + lengthA/2 - 1,
+                                       beginJ, beginJ + lengthB/2 - 1,
+                                       phi, ksi);
+
+}
+
+
+
+
 long EditDistance_NW_Cache_Oblivious(char *A, size_t lengthA, char *B, size_t lengthB){
-   return 1;
+
+   _init_base_match() ;
+   
+   if(lengthA < lengthB){
+      long phi[lengthA];
+      long ksi[lengthB];
+
+      EditDistance_NW_Cache_Oblivious_rec(A, lengthA,
+                                          B, lengthB,
+                                          ZERO, lengthA,
+                                          ZERO, lengthB,
+                                          phi, ksi);
+
+      return phi[0];
+
+   }
+
+   else{
+      long phi[lengthB];
+      long ksi[lengthA];
+
+      EditDistance_NW_Cache_Oblivious_rec(B, lengthB,
+                                          A, lengthA,
+                                          ZERO, lengthB,
+                                          ZERO, lengthA,
+                                          phi, ksi);
+      
+      return phi[0];
+
+   }
+
 }
