@@ -27,7 +27,7 @@
  */
 #define NOT_YET_COMPUTED -1L 
 #define K 4
-#define ZERO 4
+#define ZERO 0
 
 
 /** \struct NW_MemoContext
@@ -309,13 +309,58 @@ void EditDistance_NW_Cache_Oblivious_it(char *A, size_t lengthA,
                                        int beginI, int endI,
                                        int beginJ, int endJ, 
                                        long* phi, long* ksi){
-   
+
+                     
+   long precPhi = phi[endI];
+
+
    for(int j =  endJ; j >= beginJ; j--){
       for(int i = endI; i >= beginI; i--){
+         if(i == lengthA){
+            if(j == lengthB){
+               precPhi = 0;
+               ksi[j] = 0;
+            }
 
+            ksi[j] = 2 * isBase(B[j]) + phi[i];
+            phi[beginI] = precPhi;
+            precPhi = ksi[j];
+
+
+         }
+
+         else if(j == lengthB){
+
+            phi[i + 1] = precPhi;
+            precPhi = 2 * isBase(A[i]) + precPhi;
+         }
+
+         else if(isBase(A[i]) == 0){
+            phi[i + 1] = precPhi;
+         }
+
+         else if(isBase(B[j]) == 0){
+            phi[i + 1] = precPhi;
+            precPhi = phi[i];
+         }
+
+         else{
+            int sigma =  isUnknownBase(A[i]) ?  SUBSTITUTION_UNKNOWN_COST 
+                              : ( isSameBase(A[i], B[j]) ? 0 : SUBSTITUTION_COST ) 
+                        ;
+            int phi1 = sigma + phi[i-1];
+            int phi2 = 2 + precPhi;  
+            int phi3 = 2 + phi[i];  
+
+            phi[i + 1] = precPhi;
+            precPhi = (phi1 < phi2) ? ((phi1 < phi3) ? phi1 : phi3) : ((phi2 < phi3) ? phi2 : phi3);
+         }
       }
+
+      ksi[j] = precPhi;
    }
 
+   phi[beginI] = precPhi;
 }
 
 
