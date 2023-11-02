@@ -375,7 +375,7 @@ void EditDistance_NW_Cache_Oblivious_rec(char *A, size_t lengthA,
                                        int beginI, int endI,
                                        int beginJ, int endJ,
                                        long* phi, long* ksi){
-   if ((lengthA < K) && (lengthB < K)){
+   if ((endI - beginI < K) && (endJ - beginJ < K)){
       EditDistance_NW_Cache_Oblivious_it(A, lengthA, B, lengthB, beginI, endI, beginJ, endJ, phi, ksi);
       return;
    }
