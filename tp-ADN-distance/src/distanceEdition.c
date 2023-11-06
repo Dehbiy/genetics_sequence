@@ -45,7 +45,7 @@ EXAMPLE
  */
 
 #include "Needleman-Wunsch-recmemo.h" // Recursive implementation of NeedlemanWunsch with memoization
-
+#include "Needleman-Wunsch-CO.h"
 #include <stdio.h>  
 #include <stdlib.h> 
 #include <err.h> 
@@ -56,7 +56,7 @@ EXAMPLE
 #include <sys/stat.h> /* for file length */
 
 #ifdef __PERF_MESURE__
-  #include "/matieres/4MMAOD6/2022-10-TP-AOD-ADN-Docs-fournis/tp-ADN-distance/srcperf/perfMesure.c"
+ // #include "/matieres/4MMAOD6/2022-10-TP-AOD-ADN-Docs-fournis/tp-ADN-distance/srcperf/perfMesure.c"
 #endif
 
 /******************************************************************************/
