@@ -56,7 +56,7 @@ EXAMPLE
 #include <sys/stat.h> /* for file length */
 
 #ifdef __PERF_MESURE__
- // #include "/matieres/4MMAOD6/2022-10-TP-AOD-ADN-Docs-fournis/tp-ADN-distance/srcperf/perfMesure.c"
+ #include "/matieres/4MMAOD6/2022-10-TP-AOD-ADN-Docs-fournis/tp-ADN-distance/srcperf/perfMesure.c"
 #endif
 
 /******************************************************************************/
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
    struct myperf p;
    perfstart(&p) ;
 #endif
-   long res = EditDistance_NW_Cache_Oblivious(seq[0], length[0], seq[1], length[1]);
+   long res = EditDistance_NW_It(seq[0], length[0], seq[1], length[1]);
 #ifdef __PERF_MESURE__
    perfstop_and_display( stderr, &p ) ;
    // par exemple p.cumul_energy donne le nombre de kWh consommés sur le processeur entre l'appel à perf_start et celui à perfstop_and_display 
@@ -202,4 +202,5 @@ int main(int argc, char *argv[])
    printf("%ld\n", res ) ; // print the distance on stdout
    return 0 ;
 }
+
 

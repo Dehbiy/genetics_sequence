@@ -13,7 +13,7 @@
  * \brief default value for memoization of minimal distance (defined as an impossible value for a distance, -1).
  */
 #define NOT_YET_COMPUTED -1L 
-#define K 119
+#define K 120
 #define ZERO 0
 
 
