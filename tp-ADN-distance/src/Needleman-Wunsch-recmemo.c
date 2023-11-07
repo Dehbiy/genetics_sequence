@@ -139,7 +139,7 @@ long EditDistance_NW_Rec(char* A, size_t lengthA, char* B, size_t lengthB)
    }
    return res ;
 }
-
+ 
 long EditDistance_NW_It(char* A, size_t lengthA, char* B, size_t lengthB){
    _init_base_match() ;
    if (lengthB < lengthA){
