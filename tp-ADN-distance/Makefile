@@ -23,16 +23,16 @@ binary: $(BINDIR)/distanceEdition
 
 binary_perf: $(BINDIR)/distanceEdition-perf
 
-$(BINDIR)/distanceEdition-perf: $(SRCDIR)/distanceEdition.c $(BINDIR)/Needleman-Wunsch-CO.o
-	$(CC) $(OPT) -D__PERF_MESURE__ -I$(SRCDIR) -o $(BINDIR)/distanceEdition-perf $(BINDIR)/Needleman-Wunsch-CO.o $(SRCDIR)/distanceEdition.c 
+$(BINDIR)/distanceEdition-perf: $(SRCDIR)/distanceEdition.c $(BINDIR)/Needleman-Wunsch-recmemo.o
+	$(CC) $(OPT) -D__PERF_MESURE__ -I$(SRCDIR) -o $(BINDIR)/distanceEdition-perf $(BINDIR)/Needleman-Wunsch-recmemo.o $(SRCDIR)/distanceEdition.c 
 
 report: $(PDF) 
 
 doc: $(DOCDIR)/index.html
 
 
-$(BINDIR)/distanceEdition: $(SRCDIR)/distanceEdition.c $(BINDIR)/Needleman-Wunsch-CO.o
-	$(CC) $(OPT) -I$(SRCDIR) -g -o $(BINDIR)/distanceEdition  $(BINDIR)/Needleman-Wunsch-CO.o $(SRCDIR)/distanceEdition.c 
+$(BINDIR)/distanceEdition: $(SRCDIR)/distanceEdition.c $(BINDIR)/Needleman-Wunsch-recmemo.o
+	$(CC) $(OPT) -I$(SRCDIR) -g -o $(BINDIR)/distanceEdition  $(BINDIR)/Needleman-Wunsch-recmemo.o $(SRCDIR)/distanceEdition.c 
 
 
 $(BINDIR)/Needleman-Wunsch-CO.o: $(SRCDIR)/Needleman-Wunsch-CO.h $(SRCDIR)/Needleman-Wunsch-CO.c $(SRCDIR)/characters_to_base.h

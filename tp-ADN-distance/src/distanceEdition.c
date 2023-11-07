@@ -182,12 +182,12 @@ int main(int argc, char *argv[])
          fprintf(stderr, "\n" );
       }
    } 
-
+ 
 #ifdef __PERF_MESURE__
    struct myperf p;
    perfstart(&p) ;
 #endif
-   long res = EditDistance_NW_Cache_Oblivious(seq[0], length[0], seq[1], length[1]);
+   long res = EditDistance_NW_It(seq[0], length[0], seq[1], length[1]);
 #ifdef __PERF_MESURE__
    perfstop_and_display( stderr, &p ) ;
    // par exemple p.cumul_energy donne le nombre de kWh consommés sur le processeur entre l'appel à perf_start et celui à perfstop_and_display 
